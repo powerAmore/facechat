@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/FaceHomeScene.unity
+    guid: ee08a1c5c5a2a4434b052c5b51392f9d
+  - enabled: 1
+    path: Assets/Scenes/FaceRoomScene.unity
+    guid: 9fc0d4010bbf28b4594072e72b8655ab
+  m_configObjects:
+    AR Foundation RemoteARFoundationRemoteLoaderSettings: {fileID: 11400000, guid: 76952af4a30374ce89d903986aca6ef5,
+      type: 2}
+    AR Foundation RemoteARFoundationRemoteSessionRecordsData: {fileID: 11400000, guid: 46f3903adc819485c9e123673b5ade72,
+      type: 2}
+    UnityEditor.XR.ARKit.ARKitSettings: {fileID: 11400000, guid: 59bd9eba09a884cc690b5c7560336074,
+      type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: f57c2151d86414ce6a307fda216560eb,
+      type: 2}
