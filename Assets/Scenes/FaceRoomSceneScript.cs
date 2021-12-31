@@ -173,8 +173,8 @@ namespace FaceChat
             Toggle toggleMuteRemoteAudio = transform.Find("PanelOperate/Viewport/Content/ToggleMuteRemoteAudio").gameObject.GetComponent<Toggle>();
             toggleMuteRemoteAudio.onValueChanged.AddListener(this.OnToggleMuteRemoteAudio);
 
-            //captureVideoToggle = transform.Find("PanelOperate/Viewport/Content/ToggleCamera").gameObject.GetComponent<Toggle>();
-            //captureVideoToggle.onValueChanged.AddListener(this.OnToggleCamera);
+            captureVideoToggle = transform.Find("PanelOperate/Viewport/Content/ToggleCamera").gameObject.GetComponent<Toggle>();
+            captureVideoToggle.onValueChanged.AddListener(this.OnToggleCamera);
 
             //muteLocalVideoToggle = transform.Find("PanelOperate/Viewport/Content/ToggleMuteLocalVideo").gameObject.GetComponent<Toggle>();
             //muteLocalVideoToggle.onValueChanged.AddListener(this.OnToggleMuteLocalVideo);
@@ -430,21 +430,21 @@ namespace FaceChat
             mTRTCCloud.muteAllRemoteAudio(value);
         }
 
-        //void OnToggleCamera(bool value)
-        //{
-        //    LogManager.Log("OnToggleCamera: " + value);
-        //    if (value)
-        //    {
-        //        mTRTCCloud.startLocalPreview(true, null);
-        //        userTableView.UpdateVideoAvailable("", TRTCVideoStreamType.TRTCVideoStreamTypeBig, true);
-        //    }
-        //    else
-        //    {
-        //        mTRTCCloud.stopLocalPreview();
-        //        userTableView.UpdateVideoAvailable("", TRTCVideoStreamType.TRTCVideoStreamTypeBig, false);
-        //    }
-        //    DataManager.GetInstance().captureVideo = value;
-        //}
+        void OnToggleCamera(bool value)
+        {
+            LogManager.Log("OnToggleCamera: " + value);
+            if (value)
+            {
+                mTRTCCloud.startLocalPreview(true, null);
+                userTableView.UpdateVideoAvailable("", TRTCVideoStreamType.TRTCVideoStreamTypeBig, true);
+            }
+            else
+            {
+                mTRTCCloud.stopLocalPreview();
+                userTableView.UpdateVideoAvailable("", TRTCVideoStreamType.TRTCVideoStreamTypeBig, false);
+            }
+            DataManager.GetInstance().captureVideo = value;
+        }
 
         //void OnToggleMuteLocalVideo(bool value)
         //{
@@ -565,7 +565,8 @@ namespace FaceChat
             if (value)
             {
                 string seiMsg = "test sei message";
-                mTRTCCloud.sendSEIMsg(System.Text.Encoding.Default.GetBytes(seiMsg), System.Text.Encoding.Default.GetByteCount(seiMsg), 3);
+                var result = mTRTCCloud.sendSEIMsg(System.Text.Encoding.Default.GetBytes(seiMsg), System.Text.Encoding.Default.GetByteCount(seiMsg), 3);
+                LogManager.Log("MuteRemoteVideo: " + result);
             }
         }
 
