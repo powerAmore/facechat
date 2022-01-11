@@ -43,7 +43,7 @@ namespace FaceChat
             ITRTCCloudImplement.RenderKey key = new ITRTCCloudImplement.RenderKey(userId, streamType);
             if (userViewCells.ContainsKey(key))
                 return;
-
+            LogManager.Log(String.Format("AddUser: {0}", userId));
             GameObject cell = Instantiate(tableViewCell);
             //cell.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
             cell.transform.SetParent(contentView.transform, false);
@@ -57,7 +57,7 @@ namespace FaceChat
             tableViewCellScript.UserStatisVisible = userStatisVisible;
             tableViewCellScript.DoMuteAudio += new UserTableViewCell.MuteAudioHandler(TableViewDoMuteAudio);
             //tableViewCellScript.DoMuteVideo += new UserTableViewCell.MuteVideoHandler(TableViewDoMuteVideo);
-            //tableViewCellScript.IsVideoAvailable = false;
+            tableViewCellScript.IsVideoAvailable = false;
 
             userViewCells.Add(key, tableViewCellScript);
         }
@@ -79,7 +79,7 @@ namespace FaceChat
                 return;
 
             UserTableViewCell tableViewCellScript = userViewCells[key];
-            //tableViewCellScript.IsVideoAvailable = available;
+            tableViewCellScript.IsVideoAvailable = available;
             //tableViewCellScript.IsVideoMute = !available;
         }
 

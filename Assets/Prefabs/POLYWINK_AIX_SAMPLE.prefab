@@ -254,7 +254,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_CoefficientScale: 100
-  m_infoText: {fileID: 0}
   m_SkinnedMeshRenderer: {fileID: 4017907120432595062}
 --- !u!1 &8763128532379285914
 GameObject:

@@ -26,7 +26,7 @@ namespace FaceChat
         public Sprite VideoRenderFillImg;
         public Sprite VideoRenderFitImg;
         public TRTCVideoRender VideoRender;
-        public RawImage m_ModelView;
+        public RawImage m_ModelView1;
         public RawImage m_ModelView2;
 
         private string userIdStr;
@@ -42,9 +42,9 @@ namespace FaceChat
                     AudioBtn.gameObject.SetActive(false);
                     //VideoBtn.gameObject.SetActive(false);
 
-                    m_ModelView.enabled = true;
+                    m_ModelView1.enabled = true;
                     m_ModelView2.enabled = false;
-                    Debug.Log("UserTableViewCell, me, m_ModelView.enabled: " + m_ModelView.enabled.ToString());
+                    Debug.Log("UserTableViewCell, me, m_ModelView.enabled: " + m_ModelView1.enabled.ToString());
 
                 }
                 else
@@ -53,9 +53,9 @@ namespace FaceChat
                     AudioBtn.gameObject.SetActive(true);
                     //VideoBtn.gameObject.SetActive(true);
 
-                    m_ModelView.enabled = false;
+                    m_ModelView1.enabled = false;
                     m_ModelView2.enabled = true;
-                    Debug.Log("UserTableViewCell, not me, m_ModelView.enabled: " + m_ModelView.enabled.ToString());
+                    Debug.Log("UserTableViewCell, not me, m_ModelView.enabled: " + m_ModelView1.enabled.ToString());
                 }
             }
         }
@@ -89,17 +89,17 @@ namespace FaceChat
         //    }
         //}
 
-        //private bool isVideoAvailable = false;
-        //public bool IsVideoAvailable
-        //{
-        //    set
-        //    {
-        //        isVideoAvailable = value;
-        //        VideoRender.gameObject.SetActive(isVideoAvailable);
-        //        VideoRender.GetComponent<TRTCVideoRender>().Clear();
-        //        VideoRender.SetForUser(userIdStr, streamTypeInt);
-        //    }
-        //}
+        private bool isVideoAvailable = false;
+        public bool IsVideoAvailable
+        {
+            set
+            {
+                isVideoAvailable = value;
+                VideoRender.gameObject.SetActive(isVideoAvailable);
+                VideoRender.GetComponent<TRTCVideoRender>().Clear();
+                VideoRender.SetForUser(userIdStr, streamTypeInt);
+            }
+        }
 
         public UInt32 AudioVolume
         {

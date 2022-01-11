@@ -5,6 +5,8 @@
 #undef UNITY_EDITOR
 using ARFoundationRemote.Runtime;
 // AR_FOUNDATION_EDITOR_REMOTE***
+
+using System;
 using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
@@ -44,7 +46,7 @@ namespace FaceChat
             set { m_CoefficientScale = value; }
         }
 
-        public Text m_infoText;
+        public Array m_byteFacialData;
 
         [SerializeField]
         SkinnedMeshRenderer m_SkinnedMeshRenderer;
@@ -63,17 +65,14 @@ namespace FaceChat
         }
 
     #if UNITY_IOS && !UNITY_EDITOR
-        ARKitFaceSubsystem m_ARKitFaceSubsystem;
-
         Dictionary<ARKitBlendShapeLocation, int> m_FaceArkitBlendShapeIndexMap;
     #endif
 
-        ARFace m_Face;
-
         void Awake()
         {
-            m_Face = GetComponent<ARFace>();
-            m_infoText = GameObject.Find("DataTunnel").GetComponent<Text>();
+            m_byteFacialData = GameObject.Find("AR Session Origin").GetComponent<BlendShapesDataContainer>().byteFacialData;
+
+
             CreateFeatureBlendMapping();
         }
 
@@ -152,42 +151,22 @@ namespace FaceChat
 
         void UpdateVisibility()
         {
-            var visible =
-                enabled &&
-                (m_Face.trackingState == TrackingState.Tracking) &&
-                (ARSession.state > ARSessionState.Ready);
-
+            var visible = enabled;
             SetVisible(visible);
         }
 
         void OnEnable()
         {
-    #if UNITY_IOS && !UNITY_EDITOR
-            var faceManager = FindObjectOfType<ARFaceManager>();
-            if (faceManager != null)
-            {
-                m_ARKitFaceSubsystem = (ARKitFaceSubsystem)faceManager.subsystem;
-            }
-    #endif
             UpdateVisibility();
-            m_Face.updated += OnUpdated;
-            ARSession.stateChanged += OnSystemStateChanged;
         }
 
         void OnDisable()
         {
-            m_Face.updated -= OnUpdated;
-            ARSession.stateChanged -= OnSystemStateChanged;
         }
 
-        void OnSystemStateChanged(ARSessionStateChangedEventArgs eventArgs)
+        // Update is called once per frame
+        void Update()
         {
-            UpdateVisibility();
-        }
-
-        void OnUpdated(ARFaceUpdatedEventArgs eventArgs)
-        {
-            UpdateVisibility();
             UpdateFaceFeatures();
         }
 
@@ -198,28 +177,27 @@ namespace FaceChat
                 return;
             }
 
-    #if UNITY_IOS && !UNITY_EDITOR
-            using (var blendShapes = m_ARKitFaceSubsystem.GetBlendShapeCoefficients(m_Face.trackableId, Allocator.Temp))
-            {
-                string info = "";
-                foreach (var featureCoefficient in blendShapes)
-                {
-                    int mappedBlendShapeIndex;
-                    if (m_FaceArkitBlendShapeIndexMap.TryGetValue(featureCoefficient.blendShapeLocation, out mappedBlendShapeIndex))
-                    {
-                        if (mappedBlendShapeIndex >= 0)
-                        {
-                            skinnedMeshRenderer.SetBlendShapeWeight(mappedBlendShapeIndex, featureCoefficient.coefficient * coefficientScale);
-                        }
-                    }
+            var ushortArray = new ushort[(m_byteFacialData.Length - 1) / 2];
+            Buffer.BlockCopy(m_byteFacialData, 1, ushortArray, 0, m_byteFacialData.Length - 1);
 
-                    int blendShapeLocationIndex = (int)featureCoefficient.blendShapeLocation;
-                    info += blendShapeLocationIndex.ToString() + ":" + featureCoefficient.coefficient + "|";
+            Vector3 newRotation = new Vector3(Mathf.HalfToFloat((ushort)ushortArray.GetValue(0)) * 1000,
+                                              Mathf.HalfToFloat((ushort)ushortArray.GetValue(1)) * 1000,
+                                              Mathf.HalfToFloat((ushort)ushortArray.GetValue(2)) * 1000);
+            transform.eulerAngles = newRotation;
+
+            for (int i = 3; i < ushortArray.Length; i++)
+            {
+                int blendShapeLocationIndex = i - 3;
+                float coefficient = Mathf.HalfToFloat((ushort)ushortArray.GetValue(i));
+                int mappedBlendShapeIndex;
+                if (m_FaceArkitBlendShapeIndexMap.TryGetValue((ARKitBlendShapeLocation)blendShapeLocationIndex, out mappedBlendShapeIndex))
+                {
+                    if (mappedBlendShapeIndex >= 0)
+                    {
+                        skinnedMeshRenderer.SetBlendShapeWeight(mappedBlendShapeIndex, coefficient * coefficientScale);
+                    }
                 }
-                m_infoText.text = info.Substring(0,info.Length-1);  //去掉最后一个"|"
-                //Debug.Log(m_infoText.text);
             }
-    #endif
         }
     }
 }

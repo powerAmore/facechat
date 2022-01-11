@@ -32,9 +32,9 @@ namespace FaceChat
         public UserTableView userTableView;
 
         //public GameObject settingPrefab;
-        //public GameObject customCapturePrefab;
+        public GameObject customCapturePrefab;
         //private SettingScript settingScript = null;
-        //private CustomCaptureScript customCaptureScript = null;
+        private CustomCaptureScript customCaptureScript = null;
 
         private Toggle captureVideoToggle;
         private Toggle captureAudioToggle;
@@ -43,102 +43,110 @@ namespace FaceChat
 
         private ITRTCCloud mTRTCCloud;
         private ARSession m_ARSession;
-        private Text m_infoText;
-        private Text m_infoText2;
 
-        [MonoPInvokeCallback(typeof(ValueCallback))]
-        void CustomValueCallback(int code, string desc, string json_param, string user_data)
-        {
-            Utils.Log("code: " + code.ToString() + "; desc: " + desc + "; json_param: " + json_param + "; user_data: " + user_data);
-        }
+        //private Text m_infoText;
+        //private Text m_infoText2;
 
-        [MonoPInvokeCallback(typeof(ValueCallback))]
-        void CustomLoginCallback(int code, string desc, string json_param, string user_data)
-        {
-            Utils.Log("code: " + code.ToString() + "; desc: " + desc + "; json_param: " + json_param + "; user_data: " + user_data);
-            if(code == 0)
-            {
-                GroupCreate();
-            }
-        }
-
-        [MonoPInvokeCallback(typeof(ValueCallback))]
-        void CustomGroupCreateCallback(int code, string desc, string json_param, string user_data)
-        {
-            Utils.Log("code: " + code.ToString() + "; desc: " + desc + "; json_param: " + json_param + "; user_data: " + user_data);
-            if (code == 0 || code == 10021 || code == 10025)
-            {
-                // TIM加入群
-                TIMResult resGroupJoin = TencentIMSDK.GroupJoin(DataManager.GetInstance().GetRoomID().ToString(), "Hello", CustomValueCallback);
-                Utils.Log("TencentIMSDK.GroupJoin: " + resGroupJoin.ToString() + "; group_id: " + DataManager.GetInstance().GetRoomID().ToString());
-
-                TencentIMSDK.AddRecvNewMsgCallback(RecvNewMsgCallback);
-            }
-        }
-
-        [MonoPInvokeCallback(typeof(ValueCallback))]
-        void CustomOnDestoryLogoutCallback(int code, string desc, string json_param, string user_data)
-        {
-            Utils.Log("code: " + code.ToString() + "; desc: " + desc + "; json_param: " + json_param + "; user_data: " + user_data);
-
-            // TIM uninit
-            TIMResult resUninit = TencentIMSDK.Uninit();
-            Utils.Log("TencentIMSDK.Uninit: " + resUninit.ToString());
-        }
+        private byte[] m_byteFacialData;
+        private byte[] m_byteReceivedFacialData;
+        private float time = 0;//记录已经经过多少秒
 
 
-        [MonoPInvokeCallback(typeof(RecvNewMsgCallback))]
-        void RecvNewMsgCallback(List<Message> message, string user_data)
-        {
-            //Utils.Log("RecvNewMsgCallback 触发 消息条数: " + message.Count.ToString());
-            foreach (Message msg in message)
-            {
-                //Utils.Log("RecvNewMsgCallback 触发 消息ID：" + msg.message_msg_id +
-                //"; 消息发送者: " + msg.message_sender +
-                //"; 消息元素列表条数: " + msg.message_elem_array.Count.ToString());
-                if (msg.message_sender != "@TIM#SYSTEM")
-                {
-                    foreach (Elem msg_elem in msg.message_elem_array)
-                    {
-                        //Utils.Log("RecvNewMsgCallback 触发 消息ID：" + msg.message_msg_id +
-                        //            "; 消息发送者: " + msg.message_sender +
-                        //            "; 消息元素类型: " + msg_elem.elem_type.ToString() +
-                        //            "; 消息元素类型: " + msg_elem.text_elem_content);
-                        if (msg_elem.elem_type == TIMElemType.kTIMElem_Text)
-                        {
-                            m_infoText2.text = msg_elem.text_elem_content;
-                            //Debug.Log("m_infoText2.text: " + m_infoText2.text);
-                        }
-                    }
-                }
+
+        //[MonoPInvokeCallback(typeof(ValueCallback))]
+        //void CustomValueCallback(int code, string desc, string json_param, string user_data)
+        //{
+        //    Utils.Log("code: " + code.ToString() + "; desc: " + desc + "; json_param: " + json_param + "; user_data: " + user_data);
+        //}
+
+        //[MonoPInvokeCallback(typeof(ValueCallback))]
+        //void CustomLoginCallback(int code, string desc, string json_param, string user_data)
+        //{
+        //    Utils.Log("code: " + code.ToString() + "; desc: " + desc + "; json_param: " + json_param + "; user_data: " + user_data);
+        //    if(code == 0)
+        //    {
+        //        GroupCreate();
+        //    }
+        //}
+
+        //[MonoPInvokeCallback(typeof(ValueCallback))]
+        //void CustomGroupCreateCallback(int code, string desc, string json_param, string user_data)
+        //{
+        //    Utils.Log("code: " + code.ToString() + "; desc: " + desc + "; json_param: " + json_param + "; user_data: " + user_data);
+        //    if (code == 0 || code == 10021 || code == 10025)
+        //    {
+        //        // TIM加入群
+        //        TIMResult resGroupJoin = TencentIMSDK.GroupJoin(DataManager.GetInstance().GetRoomID().ToString(), "Hello", CustomValueCallback);
+        //        Utils.Log("TencentIMSDK.GroupJoin: " + resGroupJoin.ToString() + "; group_id: " + DataManager.GetInstance().GetRoomID().ToString());
+
+        //        TencentIMSDK.AddRecvNewMsgCallback(RecvNewMsgCallback);
+        //    }
+        //}
+
+        //[MonoPInvokeCallback(typeof(ValueCallback))]
+        //void CustomOnDestoryLogoutCallback(int code, string desc, string json_param, string user_data)
+        //{
+        //    Utils.Log("code: " + code.ToString() + "; desc: " + desc + "; json_param: " + json_param + "; user_data: " + user_data);
+
+        //    // TIM uninit
+        //    TIMResult resUninit = TencentIMSDK.Uninit();
+        //    Utils.Log("TencentIMSDK.Uninit: " + resUninit.ToString());
+        //}
+
+
+        //[MonoPInvokeCallback(typeof(RecvNewMsgCallback))]
+        //void RecvNewMsgCallback(List<Message> message, string user_data)
+        //{
+        //    //Utils.Log("RecvNewMsgCallback 触发 消息条数: " + message.Count.ToString());
+        //    foreach (Message msg in message)
+        //    {
+        //        //Utils.Log("RecvNewMsgCallback 触发 消息ID：" + msg.message_msg_id +
+        //        //"; 消息发送者: " + msg.message_sender +
+        //        //"; 消息元素列表条数: " + msg.message_elem_array.Count.ToString());
+        //        if (msg.message_sender != "@TIM#SYSTEM")
+        //        {
+        //            foreach (Elem msg_elem in msg.message_elem_array)
+        //            {
+        //                //Utils.Log("RecvNewMsgCallback 触发 消息ID：" + msg.message_msg_id +
+        //                //            "; 消息发送者: " + msg.message_sender +
+        //                //            "; 消息元素类型: " + msg_elem.elem_type.ToString() +
+        //                //            "; 消息元素类型: " + msg_elem.text_elem_content);
+        //                if (msg_elem.elem_type == TIMElemType.kTIMElem_Text)
+        //                {
+        //                    //m_infoText2.text = msg_elem.text_elem_content;
+        //                }
+        //            }
+        //        }
                 
-            }
+        //    }
             
-        }
+        //}
 
-        [MonoPInvokeCallback(typeof(LogCallback))]
-        void LogCallback(TIMLogLevel logLevel, string log, string user_data)
-        {
-            Utils.Log("LogCallback 触发 log：" + log + "user_data :" + user_data);
-        }
+        //[MonoPInvokeCallback(typeof(LogCallback))]
+        //void LogCallback(TIMLogLevel logLevel, string log, string user_data)
+        //{
+        //    Utils.Log("LogCallback 触发 log：" + log + "user_data :" + user_data);
+        //}
 
-        [MonoPInvokeCallback(typeof(ConvEventCallback))]
-        void ConvEventCallback(TIMConvEvent conv_event, List<ConvInfo> conv_list, string user_data)
-        {
-            Utils.Log("ConvEventCallback 触发 " + "user_data :" + user_data);
-        }
+        //[MonoPInvokeCallback(typeof(ConvEventCallback))]
+        //void ConvEventCallback(TIMConvEvent conv_event, List<ConvInfo> conv_list, string user_data)
+        //{
+        //    Utils.Log("ConvEventCallback 触发 " + "user_data :" + user_data);
+        //}
 
         void Awake()
         {
-            Application.targetFrameRate = 60;
+            //Application.targetFrameRate = 30;
         }
 
         void Start()
         {
             m_ARSession = GameObject.Find("AR Session").GetComponent<ARSession>();
             m_ARSession.enabled = false;
-            m_infoText = GameObject.Find("DataTunnel").GetComponent<Text>();
-            m_infoText2 = GameObject.Find("DataTunnel2").GetComponent<Text>();
+            //m_infoText = GameObject.Find("DataTunnel").GetComponent<Text>();
+            //m_infoText2 = GameObject.Find("DataTunnel2").GetComponent<Text>();
+            m_byteFacialData = GameObject.Find("AR Session Origin").GetComponent<BlendShapesDataContainer>().byteFacialData;
+            m_byteReceivedFacialData = GameObject.Find("AR Session Origin").GetComponent<BlendShapesDataContainer>().byteReceivedFacialData;
 
             //Toggle toggleSetting = transform.Find("PanelTest/Viewport/Content/ToggleSetting").gameObject.GetComponent<Toggle>();
             //toggleSetting.onValueChanged.AddListener(this.OnToggleSetting);
@@ -149,8 +157,8 @@ namespace FaceChat
             //Toggle toggleStartPublishing = transform.Find("PanelTest/Viewport/Content/ToggleStartPublishing").gameObject.GetComponent<Toggle>();
             //toggleStartPublishing.onValueChanged.AddListener(this.OnTogglePublishing);
 
-            // Toggle toggleCustomCapture = transform.Find("PanelOperate/Viewport/Content/ToggleCustomCapture").gameObject.GetComponent<Toggle>();
-            // toggleCustomCapture.onValueChanged.AddListener(this.OnToggleCustomCapture);
+            //Toggle toggleCustomCapture = transform.Find("PanelOperate/Viewport/Content/ToggleCustomCapture").gameObject.GetComponent<Toggle>();
+            //toggleCustomCapture.onValueChanged.AddListener(this.OnToggleCustomCapture);
 
             //Toggle beautySet = transform.Find("PanelOperate/Viewport/Content/Beauty").gameObject.GetComponent<Toggle>();
             //beautySet.onValueChanged.AddListener(this.OnToggleBeauty);
@@ -218,7 +226,9 @@ namespace FaceChat
             trtcParams.privateMapKey = "";
             trtcParams.businessInfo = "";
             trtcParams.role = DataManager.GetInstance().roleType;
+            Debug.Log("FaceRoomSenceStart，roleType: " + DataManager.GetInstance().roleType);
             TRTCAppScene scene = DataManager.GetInstance().appScene;
+            Debug.Log("FaceRoomSenceStart，appScene: " + DataManager.GetInstance().appScene);
             mTRTCCloud.enterRoom(ref trtcParams, scene);
             SetLocalAVStatus();
             TRTCVideoEncParam videoEncParams = DataManager.GetInstance().videoEncParam;
@@ -246,49 +256,65 @@ namespace FaceChat
             }
 #endif
             // TIM初始化
-            SdkConfig sdkConfig = new SdkConfig();
-            TIMResult resInit = TencentIMSDK.Init(GenerateTestUserSig.SDKAPPID, sdkConfig);
-            Utils.Log("TencentIMSDK.Init: " + resInit.ToString());
+            //SdkConfig sdkConfig = new SdkConfig();
+            //TIMResult resInit = TencentIMSDK.Init(GenerateTestUserSig.SDKAPPID, sdkConfig);
+            //Utils.Log("TencentIMSDK.Init: " + resInit.ToString());
 
             // TIM登录
-            TIMLoginStatus resLoginStatus = TencentIMSDK.GetLoginStatus();
-            Utils.Log("GetLoginStatus: " + resLoginStatus.ToString());
-            if (resLoginStatus == TIMLoginStatus.kTIMLoginStatus_Logouting || resLoginStatus == TIMLoginStatus.kTIMLoginStatus_UnLogined)
-            {
-                TIMResult resLogin = TencentIMSDK.Login(trtcParams.userId, trtcParams.userSig, CustomLoginCallback);
-                Utils.Log("TencentIMSDK.Login: " + resInit.ToString());
-            }
-            else //用户已登录直接创建房间；若未登录则在登录回调里创建房间
-            {
-                GroupCreate();
-            }
+            //TIMLoginStatus resLoginStatus = TencentIMSDK.GetLoginStatus();
+            //Utils.Log("GetLoginStatus: " + resLoginStatus.ToString());
+            //if (resLoginStatus == TIMLoginStatus.kTIMLoginStatus_Logouting || resLoginStatus == TIMLoginStatus.kTIMLoginStatus_UnLogined)
+            //{
+            //    TIMResult resLogin = TencentIMSDK.Login(trtcParams.userId, trtcParams.userSig, CustomLoginCallback);
+            //    Utils.Log("TencentIMSDK.Login: " + resInit.ToString());
+            //}
+            //else //用户已登录直接创建房间；若未登录则在登录回调里创建房间
+            //{
+            //    GroupCreate();
+            //}
 
          }
 
-        // TIM创建群
-        void GroupCreate()
-        {
-            CreateGroupParam param = new CreateGroupParam(); // 这个message可以是业务的其他message实例
-            param.create_group_param_group_id = DataManager.GetInstance().GetRoomID().ToString();
-            param.create_group_param_group_name = DataManager.GetInstance().GetRoomID().ToString();
-            param.create_group_param_group_type = TIMGroupType.kTIMGroup_AVChatRoom;
-            param.create_group_param_add_option = TIMGroupAddOption.kTIMGroupAddOpt_Any;
-            TIMResult resGroupCreate = TencentIMSDK.GroupCreate(param, CustomGroupCreateCallback);
-            Utils.Log("TencentIMSDK.GroupCreate: " + resGroupCreate.ToString() + "; group_id: " + param.create_group_param_group_id);
+        //// TIM创建群
+        //void GroupCreate()
+        //{
+        //    CreateGroupParam param = new CreateGroupParam(); // 这个message可以是业务的其他message实例
+        //    param.create_group_param_group_id = DataManager.GetInstance().GetRoomID().ToString();
+        //    param.create_group_param_group_name = DataManager.GetInstance().GetRoomID().ToString();
+        //    param.create_group_param_group_type = TIMGroupType.kTIMGroup_AVChatRoom;
+        //    param.create_group_param_add_option = TIMGroupAddOption.kTIMGroupAddOpt_Any;
+        //    TIMResult resGroupCreate = TencentIMSDK.GroupCreate(param, CustomGroupCreateCallback);
+        //    Utils.Log("TencentIMSDK.GroupCreate: " + resGroupCreate.ToString() + "; group_id: " + param.create_group_param_group_id);
 
-            TencentIMSDK.MsgSetGroupReceiveMessageOpt(DataManager.GetInstance().GetRoomID().ToString(), TIMReceiveMessageOpt.kTIMRecvMsgOpt_Not_Notify, CustomValueCallback);
-        }
+        //    TencentIMSDK.MsgSetGroupReceiveMessageOpt(DataManager.GetInstance().GetRoomID().ToString(), TIMReceiveMessageOpt.kTIMRecvMsgOpt_Not_Notify, CustomValueCallback);
+        //}
 
         void Update()
         {
             //var fps = 1.0f / Time.deltaTime;
             //Debug.Log("fps: " + fps.ToString());
-            if (m_infoText.text != "")
+            //Debug.Log("m_byteFacialData.Length: " + m_byteFacialData.Length);
+            time += Time.deltaTime;
+            if (time >= 0.033)
             {
-                //Debug.Log("m_infoText.text: " + m_infoText.text.ToString());
-                MsgSendMessage();
+                //Debug.Log("time: " + time);
+                time = 0;
+                SendSEIMsg();
             }
-            //MsgSendMessage();
+            
+            
+        }
+
+        void SendSEIMsg()
+        {
+            //string seiMsg = "test sei message";
+            if(DataManager.GetInstance().captureAudio && m_ARSession.enabled)
+            {
+                var result = mTRTCCloud.sendSEIMsg(m_byteFacialData, m_byteFacialData.Length, 1);
+                //var result = mTRTCCloud.sendSEIMsg(System.Text.Encoding.Default.GetBytes(seiMsg), System.Text.Encoding.Default.GetByteCount(seiMsg), 3);
+                Debug.Log("SendSEIMsg: " + result);
+            }
+            
         }
 
         void MsgSendMessage()
@@ -300,12 +326,12 @@ namespace FaceChat
             List<Elem> messageElems = new List<Elem>();
             Elem textMessage = new Elem();
             textMessage.elem_type = TIMElemType.kTIMElem_Text;
-            textMessage.text_elem_content = m_infoText.text.ToString();
+            //textMessage.text_elem_content = m_infoText.text.ToString();
             messageElems.Add(textMessage);
             message.message_elem_array = messageElems;
             StringBuilder messageId = new StringBuilder(512);
 
-            TIMResult res = TencentIMSDK.MsgSendMessage(conv_id, TIMConvType.kTIMConv_Group, message, messageId, CustomValueCallback);
+            //TIMResult res = TencentIMSDK.MsgSendMessage(conv_id, TIMConvType.kTIMConv_Group, message, messageId, CustomValueCallback);
             //Utils.Log(((int)res).ToString());
             //Utils.Log(messageId.ToString()); // 同步返回消息ID
         }
@@ -322,11 +348,11 @@ namespace FaceChat
             ITRTCCloud.destroyTRTCShareInstance();
             DataManager.GetInstance().ResetLocalAVFlag();
 
-            // 取消接收新消息回调
-            TencentIMSDK.RemoveRecvNewMsgCallback();
-            // TIM退出登录, 在退出登录的回调里进行TIM uninit
-            TIMResult resLogout = TencentIMSDK.Logout(CustomOnDestoryLogoutCallback);
-            Utils.Log("TencentIMSDK.Logout: " + resLogout.ToString());
+            //// 取消接收新消息回调
+            //TencentIMSDK.RemoveRecvNewMsgCallback();
+            //// TIM退出登录, 在退出登录的回调里进行TIM uninit
+            //TIMResult resLogout = TencentIMSDK.Logout(CustomOnDestoryLogoutCallback);
+            //Utils.Log("TencentIMSDK.Logout: " + resLogout.ToString());
         }
 
         void OnLeaveRoomClick()
@@ -408,9 +434,11 @@ namespace FaceChat
                 mTRTCCloud.startLocalAudio(TRTCAudioQuality.TRTCAudioQualityDefault);
                 m_ARSession.enabled = true;
                 LogManager.Log("m_ARSession.enabled: " + m_ARSession.enabled.ToString());
+                mTRTCCloud.callExperimentalAPI("{\"api\":\"enableBlackStream\", \"params\": {\"enable\":1}}");
             }
             else
             {
+                mTRTCCloud.callExperimentalAPI("{\"api\":\"enableBlackStream\", \"params\": {\"enable\":0}}");
                 mTRTCCloud.stopLocalAudio();
                 m_ARSession.enabled = false;
             }
@@ -437,11 +465,15 @@ namespace FaceChat
             {
                 mTRTCCloud.startLocalPreview(true, null);
                 userTableView.UpdateVideoAvailable("", TRTCVideoStreamType.TRTCVideoStreamTypeBig, true);
+                m_ARSession.enabled = true;
+                LogManager.Log("m_ARSession.enabled: " + m_ARSession.enabled.ToString());
             }
             else
             {
                 mTRTCCloud.stopLocalPreview();
                 userTableView.UpdateVideoAvailable("", TRTCVideoStreamType.TRTCVideoStreamTypeBig, false);
+                m_ARSession.enabled = false;
+                LogManager.Log("m_ARSession.enabled: " + m_ARSession.enabled.ToString());
             }
             DataManager.GetInstance().captureVideo = value;
         }
@@ -566,7 +598,7 @@ namespace FaceChat
             {
                 string seiMsg = "test sei message";
                 var result = mTRTCCloud.sendSEIMsg(System.Text.Encoding.Default.GetBytes(seiMsg), System.Text.Encoding.Default.GetByteCount(seiMsg), 3);
-                LogManager.Log("MuteRemoteVideo: " + result);
+                LogManager.Log("SendSEIMsg: " + result);
             }
         }
 
@@ -615,25 +647,25 @@ namespace FaceChat
 //#endif
 //        }
 
-        //void OnToggleCustomCapture(bool value)
-        //{
-        //    if (value)
-        //    {
-        //        var customCapture = Instantiate(customCapturePrefab, new Vector3(0, 0, 0), Quaternion.identity);
-        //        customCapture.transform.SetParent(mainCanvas.transform, false);
-        //        customCaptureScript = customCapture.GetComponent<CustomCaptureScript>();
-        //        customCaptureScript.AudioCallback += new CustomCaptureScript.OnCustomCaptureAudioCallback(CustomCaptureAudioCallback);
-        //        customCaptureScript.VideoCallback += new CustomCaptureScript.OnCustomCaptureVideoCallback(CustomCaptureVideoCallback);
-        //    }
-        //    else
-        //    {
-        //        if (customCaptureScript != null)
-        //        {
-        //            Transform.Destroy(customCaptureScript.gameObject);
-        //            customCaptureScript = null;
-        //        }
-        //    }
-        //}
+        void OnToggleCustomCapture(bool value)
+        {
+            if (value)
+            {
+                var customCapture = Instantiate(customCapturePrefab, new Vector3(0, 0, 0), Quaternion.identity);
+                customCapture.transform.SetParent(mainCanvas.transform, false);
+                customCaptureScript = customCapture.GetComponent<CustomCaptureScript>();
+                customCaptureScript.AudioCallback += new CustomCaptureScript.OnCustomCaptureAudioCallback(CustomCaptureAudioCallback);
+                customCaptureScript.VideoCallback += new CustomCaptureScript.OnCustomCaptureVideoCallback(CustomCaptureVideoCallback);
+            }
+            else
+            {
+                if (customCaptureScript != null)
+                {
+                    Transform.Destroy(customCaptureScript.gameObject);
+                    customCaptureScript = null;
+                }
+            }
+        }
 
         void OnRoleChanged()
         {
@@ -873,10 +905,14 @@ namespace FaceChat
         {
             LogManager.Log(String.Format("onSwitchRole {0}, {1}, {2}", deviceId, type, state));
         }
+
         public void onRecvSEIMsg(String userId, Byte[] message, UInt32 msgSize)
         {
-            string seiMessage = System.Text.Encoding.UTF8.GetString(message, 0, (int)msgSize);
-            LogManager.Log(String.Format("onRecvSEIMsg {0}, {1}, {2}", userId, seiMessage, msgSize));
+            //string seiMessage = System.Text.Encoding.UTF8.GetString(message, 0, (int)msgSize);
+            m_byteReceivedFacialData = message;
+            //LogManager.Log(String.Format("onRecvSEIMsg {0}, {1}, {2}", userId, seiMessage, msgSize));
+            Debug.Log("onRecvSEIMsg: " + userId + ", " + msgSize + ", " + m_byteReceivedFacialData.Length);
+            LogManager.Log("onRecvSEIMsg: " + userId + ", " + msgSize + ", " + m_byteReceivedFacialData.Length);
         }
 
         public void onStartPublishing(int err, string errMsg)
