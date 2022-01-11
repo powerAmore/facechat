@@ -45,8 +45,9 @@ namespace FaceChat
             set { m_CoefficientScale = value; }
         }
 
-        public Array m_byteFacialData;
-        
+        public int m_encodeType;
+        public byte[] m_byteFacialData;
+
 #if UNITY_IOS && !UNITY_EDITOR
         ARKitFaceSubsystem m_ARKitFaceSubsystem;
     #endif
@@ -58,6 +59,11 @@ namespace FaceChat
         {
             m_Face = GetComponent<ARFace>();
             m_Origin = GameObject.Find("AR Session Origin").GetComponent<ARSessionOrigin>();
+        }
+
+        private void Start()
+        {
+            m_encodeType = GameObject.Find("AR Session Origin").GetComponent<BlendShapesDataContainer>().encodeType;
             m_byteFacialData = GameObject.Find("AR Session Origin").GetComponent<BlendShapesDataContainer>().byteFacialData;
         }
 
@@ -115,55 +121,78 @@ namespace FaceChat
     #if UNITY_IOS && !UNITY_EDITOR
             using (var blendShapes = m_ARKitFaceSubsystem.GetBlendShapeCoefficients(m_Face.trackableId, Allocator.Temp))
             {
-                ushort[] ushortFacialDataArray = new ushort[3+52];
-
-                var rotationRelativeToCamera = Quaternion.Inverse(m_Origin.camera.transform.rotation) * m_Face.transform.rotation; // this quaternion represents a face rotation relative to camera
-                var eulerAnglesRelativeToCamera = rotationRelativeToCamera.eulerAngles;
-
-                // rotation信息为角度信息0~360度，将角度值除以1000再转换成半精度浮点数存储（unity里面半精度浮点数用ushort表示，除以1000用以将数值变小，以存储更多位数，提高精度）
-                ushortFacialDataArray[0] = Mathf.FloatToHalf(eulerAnglesRelativeToCamera.x / 1000); 
-                ushortFacialDataArray[1] = Mathf.FloatToHalf(eulerAnglesRelativeToCamera.y / 1000);
-                ushortFacialDataArray[2] = Mathf.FloatToHalf(eulerAnglesRelativeToCamera.z / 1000);
-
-                foreach (var featureCoefficient in blendShapes)
+                if (m_encodeType == 1)
                 {
-                    int blendShapeLocationIndex = (int)featureCoefficient.blendShapeLocation;
-                    ushortFacialDataArray[blendShapeLocationIndex + 3] = Mathf.FloatToHalf(featureCoefficient.coefficient); // blendshapes的值不用除以1000，因为blendshapes的值都是0到100间的数值，用半精度存储精度已经足够
+                    ushort[] ushortFacialDataArray = new ushort[3 + 52];
+
+                    var rotationRelativeToCamera = Quaternion.Inverse(m_Origin.camera.transform.rotation) * m_Face.transform.rotation; // this quaternion represents a face rotation relative to camera
+                    var eulerAnglesRelativeToCamera = rotationRelativeToCamera.eulerAngles;
+
+                    // rotation信息为角度信息0~360度，将角度值除以1000再转换成半精度浮点数存储（unity里面半精度浮点数用ushort表示，除以1000用以将数值变小，以存储更多位数，提高精度）
+                    ushortFacialDataArray[0] = Mathf.FloatToHalf(eulerAnglesRelativeToCamera.x / 1000);
+                    ushortFacialDataArray[1] = Mathf.FloatToHalf(eulerAnglesRelativeToCamera.y / 1000);
+                    ushortFacialDataArray[2] = Mathf.FloatToHalf(eulerAnglesRelativeToCamera.z / 1000);
+
+                    foreach (var featureCoefficient in blendShapes)
+                    {
+                        int blendShapeLocationIndex = (int)featureCoefficient.blendShapeLocation;
+                        ushortFacialDataArray[blendShapeLocationIndex + 3] = Mathf.FloatToHalf(featureCoefficient.coefficient); // blendshapes的值不用除以1000，因为blendshapes的值都是0到100间的数值，用半精度存储精度已经足够
+                    }
+
+                    Buffer.BlockCopy(ushortFacialDataArray, 0, m_byteFacialData, 1, m_byteFacialData.Length - 1);
+
+                    //string strInfo = "";
+                    //for (int i = 0; i < ushortFacialDataArray.Length; i++)
+                    //{
+                    //    if (i == 0)
+                    //    {
+                    //        float x = Mathf.HalfToFloat((ushort)ushortFacialDataArray.GetValue(i)) * 1000;
+                    //        strInfo += x.ToString();
+                    //    }
+                    //    else if (i == 1)
+                    //    {
+                    //        float y = Mathf.HalfToFloat((ushort)ushortFacialDataArray.GetValue(i)) * 1000;
+                    //        strInfo += ", " + y.ToString();
+                    //    }
+                    //    else if (i == 2)
+                    //    {
+                    //        float z = Mathf.HalfToFloat((ushort)ushortFacialDataArray.GetValue(i)) * 1000;
+                    //        strInfo += ", " + z.ToString();
+                    //    }
+                    //    else
+                    //    {
+                    //        float coefficient = Mathf.HalfToFloat((ushort)ushortFacialDataArray.GetValue(i));
+                    //        strInfo += ", " + coefficient.ToString();
+                    //    }
+                    //}
+
+                    //string strInfo2 = "";
+                    //for (int i = 0; i < m_byteFacialData.Length; i++)
+                    //{
+                    //    strInfo2 += ", " + m_byteFacialData.GetValue(i).ToString();
+                    //}
+                    //Debug.Log("strInfo2: " + strInfo2);
                 }
+                else if (m_encodeType == 2)
+                {
+                    ushort[] ushortFacialDataArray = new ushort[3];
 
-                Buffer.BlockCopy(ushortFacialDataArray, 0, m_byteFacialData, 1, m_byteFacialData.Length-1);
+                    var rotationRelativeToCamera = Quaternion.Inverse(m_Origin.camera.transform.rotation) * m_Face.transform.rotation; // this quaternion represents a face rotation relative to camera
+                    var eulerAnglesRelativeToCamera = rotationRelativeToCamera.eulerAngles;
 
-                //string strInfo = "";
-                //for (int i = 0; i < ushortFacialDataArray.Length; i++)
-                //{
-                //    if (i == 0)
-                //    {
-                //        float x = Mathf.HalfToFloat((ushort)ushortFacialDataArray.GetValue(i)) * 1000;
-                //        strInfo += x.ToString();
-                //    }
-                //    else if (i == 1)
-                //    {
-                //        float y = Mathf.HalfToFloat((ushort)ushortFacialDataArray.GetValue(i)) * 1000;
-                //        strInfo += ", " + y.ToString();
-                //    }
-                //    else if (i == 2)
-                //    {
-                //        float z = Mathf.HalfToFloat((ushort)ushortFacialDataArray.GetValue(i)) * 1000;
-                //        strInfo += ", " + z.ToString();
-                //    }
-                //    else
-                //    {
-                //        float coefficient = Mathf.HalfToFloat((ushort)ushortFacialDataArray.GetValue(i));
-                //        strInfo += ", " + coefficient.ToString();
-                //    }
-                //}
+                    // rotation信息为角度信息0~360度，将角度值除以1000再转换成半精度浮点数存储（unity里面半精度浮点数用ushort表示，除以1000用以将数值变小，以存储更多位数，提高精度）
+                    ushortFacialDataArray[0] = Mathf.FloatToHalf(eulerAnglesRelativeToCamera.x / 1000);
+                    ushortFacialDataArray[1] = Mathf.FloatToHalf(eulerAnglesRelativeToCamera.y / 1000);
+                    ushortFacialDataArray[2] = Mathf.FloatToHalf(eulerAnglesRelativeToCamera.z / 1000);
 
-                //string strInfo2 = "";
-                //for (int i = 0; i < m_byteFacialData.Length; i++)
-                //{
-                //    strInfo2 += ", " + m_byteFacialData.GetValue(i).ToString();
-                //}
-                //Debug.Log("strInfo2: " + strInfo2);
+                    Buffer.BlockCopy(ushortFacialDataArray, 0, m_byteFacialData, 1, ushortFacialDataArray.Length * 2);
+
+                    foreach (var featureCoefficient in blendShapes)
+                    {
+                        int blendShapeLocationIndex = (int)featureCoefficient.blendShapeLocation;
+                        m_byteFacialData[blendShapeLocationIndex + 7] = (byte)((int)(featureCoefficient.coefficient * 100)); // blendshapes的值乘以100取整之后会是一个0~100的整数，可以用一个byte存储
+                    }
+                }
 
             }
 #endif

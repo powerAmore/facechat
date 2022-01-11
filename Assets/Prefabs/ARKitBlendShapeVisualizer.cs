@@ -46,7 +46,8 @@ namespace FaceChat
             set { m_CoefficientScale = value; }
         }
 
-        public Array m_byteFacialData;
+        public int m_encodeType;
+        public byte[] m_byteFacialData;
 
         [SerializeField]
         SkinnedMeshRenderer m_SkinnedMeshRenderer;
@@ -70,10 +71,13 @@ namespace FaceChat
 
         void Awake()
         {
-            m_byteFacialData = GameObject.Find("AR Session Origin").GetComponent<BlendShapesDataContainer>().byteFacialData;
-
-
             CreateFeatureBlendMapping();
+        }
+
+        private void Start()
+        {
+            m_encodeType = GameObject.Find("AR Session Origin").GetComponent<BlendShapesDataContainer>().encodeType;
+            m_byteFacialData = GameObject.Find("AR Session Origin").GetComponent<BlendShapesDataContainer>().byteFacialData;
         }
 
         void CreateFeatureBlendMapping()
@@ -177,27 +181,81 @@ namespace FaceChat
                 return;
             }
 
-            var ushortArray = new ushort[(m_byteFacialData.Length - 1) / 2];
-            Buffer.BlockCopy(m_byteFacialData, 1, ushortArray, 0, m_byteFacialData.Length - 1);
-
-            Vector3 newRotation = new Vector3(Mathf.HalfToFloat((ushort)ushortArray.GetValue(0)) * 1000,
-                                              Mathf.HalfToFloat((ushort)ushortArray.GetValue(1)) * 1000,
-                                              Mathf.HalfToFloat((ushort)ushortArray.GetValue(2)) * 1000);
-            transform.eulerAngles = newRotation;
-
-            for (int i = 3; i < ushortArray.Length; i++)
+            if (m_encodeType == 1)
             {
-                int blendShapeLocationIndex = i - 3;
-                float coefficient = Mathf.HalfToFloat((ushort)ushortArray.GetValue(i));
-                int mappedBlendShapeIndex;
-                if (m_FaceArkitBlendShapeIndexMap.TryGetValue((ARKitBlendShapeLocation)blendShapeLocationIndex, out mappedBlendShapeIndex))
+                var ushortArray = new ushort[(m_byteFacialData.Length - 1) / 2];
+                Buffer.BlockCopy(m_byteFacialData, 1, ushortArray, 0, m_byteFacialData.Length - 1);
+
+                Vector3 newRotation = new Vector3(Mathf.HalfToFloat((ushort)ushortArray.GetValue(0)) * 1000,
+                                                  Mathf.HalfToFloat((ushort)ushortArray.GetValue(1)) * 1000,
+                                                  Mathf.HalfToFloat((ushort)ushortArray.GetValue(2)) * 1000);
+                transform.eulerAngles = newRotation;
+
+                for (int i = 3; i < ushortArray.Length; i++)
                 {
-                    if (mappedBlendShapeIndex >= 0)
+                    int blendShapeLocationIndex = i - 3;
+                    float coefficient = Mathf.HalfToFloat((ushort)ushortArray.GetValue(i));
+                    int mappedBlendShapeIndex;
+                    if (m_FaceArkitBlendShapeIndexMap.TryGetValue((ARKitBlendShapeLocation)blendShapeLocationIndex, out mappedBlendShapeIndex))
                     {
-                        skinnedMeshRenderer.SetBlendShapeWeight(mappedBlendShapeIndex, coefficient * coefficientScale);
+                        if (mappedBlendShapeIndex >= 0)
+                        {
+                            skinnedMeshRenderer.SetBlendShapeWeight(mappedBlendShapeIndex, coefficient * coefficientScale);
+                        }
+                    }
+                }
+
+                //string strInfo = "";
+                //for (int i = 0; i < ushortArray.Length; i++)
+                //{
+                //    if (i == 0)
+                //    {
+                //        float x = Mathf.HalfToFloat((ushort)ushortArray.GetValue(i)) * 1000;
+                //        strInfo += x.ToString();
+                //    }
+                //    else if (i == 1)
+                //    {
+                //        float y = Mathf.HalfToFloat((ushort)ushortArray.GetValue(i)) * 1000;
+                //        strInfo += ", " + y.ToString();
+                //    }
+                //    else if (i == 2)
+                //    {
+                //        float z = Mathf.HalfToFloat((ushort)ushortArray.GetValue(i)) * 1000;
+                //        strInfo += ", " + z.ToString();
+                //    }
+                //    else
+                //    {
+                //        float coefficient = Mathf.HalfToFloat((ushort)ushortArray.GetValue(i));
+                //        strInfo += ", " + coefficient.ToString();
+                //    }
+                //}
+                //Debug.Log("ushortArray: " + strInfo);
+            }
+            else if (m_encodeType == 2)
+            {
+                var ushortArray = new ushort[3];
+                Buffer.BlockCopy(m_byteFacialData, 1, ushortArray, 0, ushortArray.Length * 2);
+
+                Vector3 newRotation = new Vector3(Mathf.HalfToFloat((ushort)ushortArray.GetValue(0)) * 1000,
+                                                  Mathf.HalfToFloat((ushort)ushortArray.GetValue(1)) * 1000,
+                                                  Mathf.HalfToFloat((ushort)ushortArray.GetValue(2)) * 1000);
+                transform.eulerAngles = newRotation;
+
+                for (int i = 7; i < m_byteFacialData.Length; i++)
+                {
+                    int blendShapeLocationIndex = i - 7;
+                    int coefficient = m_byteFacialData[i];
+                    int mappedBlendShapeIndex;
+                    if (m_FaceArkitBlendShapeIndexMap.TryGetValue((ARKitBlendShapeLocation)blendShapeLocationIndex, out mappedBlendShapeIndex))
+                    {
+                        if (mappedBlendShapeIndex >= 0)
+                        {
+                            skinnedMeshRenderer.SetBlendShapeWeight(mappedBlendShapeIndex, (float)coefficient / 100 * coefficientScale);
+                        }
                     }
                 }
             }
+
         }
     }
 }
