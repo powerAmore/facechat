@@ -18,11 +18,13 @@ public class BlendShapesDataContainer : MonoBehaviour
         if (encodeType == 1)
         {
             byteFacialData = new byte[1 + 3 * 2 + 52 * 2]; // 第一个byte是编码type，接下来6个bytes是rotation数据，最后104个bytes是blendshapes数据
+            byteReceivedFacialData = new byte[1 + 3 * 2 + 52 * 2];
             byteFacialData[0] = 1;
         }
         else if (encodeType == 2)
         {
             byteFacialData = new byte[1 + 3 * 2 + 52]; // 第一个byte是编码type，接下来6个bytes是rotation数据，最后52个bytes是blendshapes数据，这里的blendshapes数据只包含0~100的整数
+            byteReceivedFacialData = new byte[1 + 3 * 2 + 52];
             byteFacialData[0] = 2;
         }
     }

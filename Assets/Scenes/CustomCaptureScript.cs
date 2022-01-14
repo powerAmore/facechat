@@ -16,10 +16,10 @@ namespace FaceChat
         public event OnCustomCaptureAudioCallback AudioCallback;
         public event OnCustomCaptureVideoCallback VideoCallback;
 
-        public Toggle AudioToggle;
-        public Toggle VideoToggle;
-        public Dropdown AudioDropDown;
-        public Dropdown VideoDropDown;
+        //public Toggle AudioToggle;
+        //public Toggle VideoToggle;
+        //public Dropdown AudioDropDown;
+        //public Dropdown VideoDropDown;
 
         private ITRTCCloud mTRTCCloud;
 
@@ -49,25 +49,25 @@ namespace FaceChat
         // Start is called before the first frame update
         void Start()
         {
-            mTRTCCloud = ITRTCCloud.getTRTCShareInstance();
+            //mTRTCCloud = ITRTCCloud.getTRTCShareInstance();
 
-            AudioToggle.SetIsOnWithoutNotify(false);
-            VideoToggle.SetIsOnWithoutNotify(false);
+            //AudioToggle.SetIsOnWithoutNotify(false);
+            //VideoToggle.SetIsOnWithoutNotify(false);
 
-            List<string> audioNames = new List<string>();
-            audioNames.Add("48_1_audio.pcm");
-            audioNames.Add("16_1_audio.pcm");
-            AudioDropDown.AddOptions(audioNames);
+            //List<string> audioNames = new List<string>();
+            //audioNames.Add("48_1_audio.pcm");
+            //audioNames.Add("16_1_audio.pcm");
+            //AudioDropDown.AddOptions(audioNames);
 
-            List<string> videoNames = new List<string>();
-            videoNames.Add("320x240_video.yuv");
-            VideoDropDown.AddOptions(videoNames);
+            //List<string> videoNames = new List<string>();
+            //videoNames.Add("320x240_video.yuv");
+            //VideoDropDown.AddOptions(videoNames);
 
-            AudioDropDown.onValueChanged.AddListener(this.OnAudioDropDownChanged);
-            VideoDropDown.onValueChanged.AddListener(this.OnVideoDropDownChanged);
+            //AudioDropDown.onValueChanged.AddListener(this.OnAudioDropDownChanged);
+            //VideoDropDown.onValueChanged.AddListener(this.OnVideoDropDownChanged);
 
             //mVideoBlackBuffer = new byte[] {0};
-    }
+        }
 
         void OnDestroy()
         {
@@ -90,55 +90,55 @@ namespace FaceChat
         public void OnToggleCustomAudio()
         {
             UnityEngine.Debug.Log("OnToggleCustomAudio");
-            if (this.AudioToggle.isOn)
-            {
-                // 开启自定义渲染音频
-                if (AudioDropDown.value == 0)
-                {
-                    StartCustomCaptureAudio(mTestPath + "48_1_audio.pcm", 48000, 1);
-                }
-                else
-                {
-                    StartCustomCaptureAudio(mTestPath + "16_1_audio.pcm", 16000, 1);
-                }
-            }
-            else
-            {
-                // 停止自定义渲染音频
-                StopCustomCaptureAudio();
-            }
+            //if (this.AudioToggle.isOn)
+            //{
+            //    // 开启自定义渲染音频
+            //    if (AudioDropDown.value == 0)
+            //    {
+            //        StartCustomCaptureAudio(mTestPath + "48_1_audio.pcm", 48000, 1);
+            //    }
+            //    else
+            //    {
+            //        StartCustomCaptureAudio(mTestPath + "16_1_audio.pcm", 16000, 1);
+            //    }
+            //}
+            //else
+            //{
+            //    // 停止自定义渲染音频
+            //    StopCustomCaptureAudio();
+            //}
         }
 
         public void OnToggleCustomVideo()
         {
             UnityEngine.Debug.Log("OnToggleCustomVideo");
-            if (this.VideoToggle.isOn)
-            {
-                // 开启自定义渲染视频
-                StartCustomCaptureVideo(mTestPath + "320x240_video.yuv", 320, 240);
-            }
-            else
-            {
-                // 关闭自定义渲染视频
-                StopCustomCaptureVideo();
-            }
+            //if (this.VideoToggle.isOn)
+            //{
+            //    // 开启自定义渲染视频
+            //    StartCustomCaptureVideo(mTestPath + "320x240_video.yuv", 320, 240);
+            //}
+            //else
+            //{
+            //    // 关闭自定义渲染视频
+            //    StopCustomCaptureVideo();
+            //}
         }
 
         private void OnAudioDropDownChanged(int value)
         {
             UnityEngine.Debug.Log("OnAudioDropDownChanged" + value);
-            if (this.AudioToggle.isOn)
-            {
-                StopCustomCaptureAudio();
-                if (AudioDropDown.value == 0)
-                {
-                    StartCustomCaptureAudio(mTestPath + "48_1_audio.pcm", 48000, 1);
-                }
-                else
-                {
-                    StartCustomCaptureAudio(mTestPath + "16_1_audio.pcm", 16000, 1);
-                }
-            }
+            //if (this.AudioToggle.isOn)
+            //{
+            //    StopCustomCaptureAudio();
+            //    if (AudioDropDown.value == 0)
+            //    {
+            //        StartCustomCaptureAudio(mTestPath + "48_1_audio.pcm", 48000, 1);
+            //    }
+            //    else
+            //    {
+            //        StartCustomCaptureAudio(mTestPath + "16_1_audio.pcm", 16000, 1);
+            //    }
+            //}
         }
 
         private void OnVideoDropDownChanged(int value)
@@ -256,27 +256,6 @@ namespace FaceChat
             }
         }
 
-        private void StartCustomBlackVideo()
-        {
-            mStartCustomCaptureVideo = true;
-            VideoCallback(false);
-            mTRTCCloud.enableCustomVideoCapture(true);
-
-            if (mVideoCustomThread == null)
-            {
-                mVideoCustomThread = new Thread(() =>
-                {
-                    while (mStartCustomCaptureVideo)
-                    {
-                        SendCustomBlackVideoFrame();
-                        Thread.Sleep(66);
-                    }
-                })
-                { IsBackground = true };
-                mVideoCustomThread.Start();
-            }
-        }
-
         public void SendCustomVideoFrame()
         {
             if (!mStartCustomCaptureVideo) return;
@@ -309,6 +288,48 @@ namespace FaceChat
             }
         }
 
+        private void StopCustomCaptureVideo()
+        {
+            mVideoFileLength = 0;
+            mVideoFilePath = "";
+            mVideoWidth = 0;
+            mVideoHeight = 0;
+            mOffsetVideoRead = 0;
+            mVideoBuffer = null;
+
+            mStartCustomCaptureVideo = false;
+            mTRTCCloud.enableCustomVideoCapture(false);
+            VideoCallback(true);
+
+            if (mVideoCustomThread != null)
+            {
+                mVideoCustomThread.Join();
+                mVideoCustomThread = null;
+            }
+        }
+
+        public void StartCustomBlackVideo()
+        {
+            mStartCustomCaptureVideo = true;
+            VideoCallback(false);
+            mTRTCCloud = ITRTCCloud.getTRTCShareInstance();
+            mTRTCCloud.enableCustomVideoCapture(true);
+
+            if (mVideoCustomThread == null)
+            {
+                mVideoCustomThread = new Thread(() =>
+                {
+                    while (mStartCustomCaptureVideo)
+                    {
+                        SendCustomBlackVideoFrame();
+                        Thread.Sleep(66);
+                    }
+                })
+                { IsBackground = true };
+                mVideoCustomThread.Start();
+            }
+        }
+
         public void SendCustomBlackVideoFrame()
         {
             if (!mStartCustomCaptureVideo) return;
@@ -330,7 +351,7 @@ namespace FaceChat
             }
         }
 
-        private void StopCustomCaptureVideo()
+        public void StopCustomBlackVideo()
         {
             mVideoFileLength = 0;
             mVideoFilePath = "";
@@ -340,26 +361,7 @@ namespace FaceChat
             mVideoBuffer = null;
 
             mStartCustomCaptureVideo = false;
-            mTRTCCloud.enableCustomVideoCapture(false);
-            VideoCallback(true);
-
-            if (mVideoCustomThread != null)
-            {
-                mVideoCustomThread.Join();
-                mVideoCustomThread = null;
-            }
-        }
-
-        private void StopCustomBlackVideo()
-        {
-            mVideoFileLength = 0;
-            mVideoFilePath = "";
-            mVideoWidth = 0;
-            mVideoHeight = 0;
-            mOffsetVideoRead = 0;
-            mVideoBuffer = null;
-
-            mStartCustomCaptureVideo = false;
+            mTRTCCloud = ITRTCCloud.getTRTCShareInstance();
             mTRTCCloud.enableCustomVideoCapture(false);
             VideoCallback(true);
 

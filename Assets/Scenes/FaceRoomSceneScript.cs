@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -47,10 +48,12 @@ namespace FaceChat
         //private Text m_infoText;
         //private Text m_infoText2;
 
-        private byte[] m_byteFacialData;
-        private byte[] m_byteReceivedFacialData;
+        public byte[] m_byteFacialData;
+        public byte[] m_byteReceivedFacialData;
         private float time = 0;//记录已经经过多少秒
-
+        private float during_time = 0;//记录已经经过多少秒
+        private long timestamp = 0;
+        private int during_count = 0;
 
 
         //[MonoPInvokeCallback(typeof(ValueCallback))]
@@ -117,9 +120,9 @@ namespace FaceChat
         //                }
         //            }
         //        }
-                
+
         //    }
-            
+
         //}
 
         //[MonoPInvokeCallback(typeof(LogCallback))]
@@ -299,22 +302,53 @@ namespace FaceChat
             {
                 //Debug.Log("time: " + time);
                 time = 0;
-                SendSEIMsg();
+                CustomSendSEIMsg();
+                //SendCustomCmdMsg();
             }
-            
+
+        }
+
+        void CustomSendSEIMsg()
+        {
+            if (DataManager.GetInstance().captureAudio && m_ARSession.enabled)
+            {
+                //byte[] seiMsg = new byte[] {2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+                byte[] seiMsg = m_byteFacialData.ToArray();
+
+                string strInfo = "";
+                for (int i = 0; i < seiMsg.Length; i++)
+                {
+                    strInfo += seiMsg[i].ToString() + ", ";
+                }
+                Debug.Log("seiMsg.Length: " + seiMsg.Length);
+                Debug.Log("seiMsg strInfo: " + strInfo);
+
+                var result = mTRTCCloud.sendSEIMsg(seiMsg, seiMsg.Length, 1);
+                //var result = mTRTCCloud.sendSEIMsg(System.Text.Encoding.Default.GetBytes(m_byteFacialData), System.Text.Encoding.Default.GetByteCount(seiMsg), 3);
+
+                //Debug.Log("m_byteFacialData.Length: " + m_byteFacialData.Length + ", m_byteFacialData[0]: " + m_byteFacialData[0]);
+            }
             
         }
 
-        void SendSEIMsg()
+        void SendCustomCmdMsg()
         {
-            //string seiMsg = "test sei message";
-            if(DataManager.GetInstance().captureAudio && m_ARSession.enabled)
+            if (DataManager.GetInstance().captureAudio && m_ARSession.enabled)
             {
-                var result = mTRTCCloud.sendSEIMsg(m_byteFacialData, m_byteFacialData.Length, 1);
-                //var result = mTRTCCloud.sendSEIMsg(System.Text.Encoding.Default.GetBytes(seiMsg), System.Text.Encoding.Default.GetByteCount(seiMsg), 3);
-                Debug.Log("SendSEIMsg: " + result);
+                //byte[] seiMsg = new byte[] {2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+                byte[] cmdMsg = m_byteFacialData.ToArray();
+
+                string strInfo = "";
+                for (int i = 0; i < cmdMsg.Length; i++)
+                {
+                    strInfo += cmdMsg[i].ToString() + ", ";
+                }
+                Debug.Log("cmdMsg.Length: " + cmdMsg.Length);
+                Debug.Log("cmdMsg strInfo: " + strInfo);
+
+                var result = mTRTCCloud.sendCustomCmdMsg(1, cmdMsg, cmdMsg.Length, true, true);
+                Debug.Log("result: " + result);
             }
-            
         }
 
         void MsgSendMessage()
@@ -463,20 +497,52 @@ namespace FaceChat
             LogManager.Log("OnToggleCamera: " + value);
             if (value)
             {
-                mTRTCCloud.startLocalPreview(true, null);
-                userTableView.UpdateVideoAvailable("", TRTCVideoStreamType.TRTCVideoStreamTypeBig, true);
+                mTRTCCloud.startLocalAudio(TRTCAudioQuality.TRTCAudioQualityDefault);
                 m_ARSession.enabled = true;
                 LogManager.Log("m_ARSession.enabled: " + m_ARSession.enabled.ToString());
+
+                var customCapture = Instantiate(customCapturePrefab, new Vector3(0, 0, 0), Quaternion.identity);
+                customCapture.transform.SetParent(mainCanvas.transform, false);
+                customCaptureScript = customCapture.GetComponent<CustomCaptureScript>();
+                customCaptureScript.AudioCallback += new CustomCaptureScript.OnCustomCaptureAudioCallback(CustomCaptureAudioCallback);
+                customCaptureScript.VideoCallback += new CustomCaptureScript.OnCustomCaptureVideoCallback(CustomCaptureVideoCallback);
+                customCaptureScript.StartCustomBlackVideo();
             }
             else
             {
-                mTRTCCloud.stopLocalPreview();
-                userTableView.UpdateVideoAvailable("", TRTCVideoStreamType.TRTCVideoStreamTypeBig, false);
+                customCaptureScript.StopCustomBlackVideo();
+                if (customCaptureScript != null)
+                {
+                    Transform.Destroy(customCaptureScript.gameObject);
+                    customCaptureScript = null;
+                }
+
+                mTRTCCloud.stopLocalAudio();
                 m_ARSession.enabled = false;
-                LogManager.Log("m_ARSession.enabled: " + m_ARSession.enabled.ToString());
+
             }
-            DataManager.GetInstance().captureVideo = value;
+            DataManager.GetInstance().captureAudio = value;
         }
+
+        //void OnToggleCamera(bool value)
+        //{
+        //    LogManager.Log("OnToggleCamera: " + value);
+        //    if (value)
+        //    {
+        //        mTRTCCloud.startLocalPreview(true, null);
+        //        userTableView.UpdateVideoAvailable("", TRTCVideoStreamType.TRTCVideoStreamTypeBig, true);
+        //        m_ARSession.enabled = true;
+        //        LogManager.Log("m_ARSession.enabled: " + m_ARSession.enabled.ToString());
+        //    }
+        //    else
+        //    {
+        //        mTRTCCloud.stopLocalPreview();
+        //        userTableView.UpdateVideoAvailable("", TRTCVideoStreamType.TRTCVideoStreamTypeBig, false);
+        //        m_ARSession.enabled = false;
+        //        LogManager.Log("m_ARSession.enabled: " + m_ARSession.enabled.ToString());
+        //    }
+        //    DataManager.GetInstance().captureAudio = value;
+        //}
 
         //void OnToggleMuteLocalVideo(bool value)
         //{
@@ -820,6 +886,10 @@ namespace FaceChat
             userTableView.UpdateAudioAvailable(userId, TRTCVideoStreamType.TRTCVideoStreamTypeBig, available);
         }
 
+        public void onLocalProcessedAudioFrame(TRTCAudioFrame frame)
+        { }
+
+
         public void onFirstVideoFrame(String userId, TRTCVideoStreamType streamType, int width, int height)
         {
             LogManager.Log(String.Format("onFirstVideoFrame {0}, {1}, {2}, {3}", userId, streamType, width, height));
@@ -906,13 +976,84 @@ namespace FaceChat
             LogManager.Log(String.Format("onSwitchRole {0}, {1}, {2}", deviceId, type, state));
         }
 
+        public void onRecvCustomCmdMsg(String userId, int cmdID, int seq, Byte[] message, int messageSize)
+        {
+
+            LogManager.Log(String.Format("onRecvCustomCmdMsg {0}, {1} ,{2}, {3}, {4}", userId, cmdID, seq, messageSize, m_byteReceivedFacialData.Length));
+            string strInfo = "";
+            for (int i = 0; i < messageSize; i++)
+            {
+                strInfo += message[i].ToString() + ", ";
+            }
+            Debug.Log("strInfo: " + strInfo);
+
+
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            long unixTimeMilliseconds = now.ToUnixTimeMilliseconds();
+            if (timestamp == 0)
+            {
+                timestamp = unixTimeMilliseconds;
+            }
+            else
+            {
+                var delta_time = unixTimeMilliseconds - timestamp;
+                timestamp = unixTimeMilliseconds;
+
+                during_time += delta_time;
+                if (during_time >= 1000)
+                {
+                    Debug.Log("during_time: " + during_time + ", during_count: " + during_count);
+                    during_time = 0;
+                    during_count = 0;
+                }
+                else
+                {
+                    during_count += 1;
+                }
+
+            }
+        }
+
         public void onRecvSEIMsg(String userId, Byte[] message, UInt32 msgSize)
         {
             //string seiMessage = System.Text.Encoding.UTF8.GetString(message, 0, (int)msgSize);
-            m_byteReceivedFacialData = message;
-            //LogManager.Log(String.Format("onRecvSEIMsg {0}, {1}, {2}", userId, seiMessage, msgSize));
+            //m_byteReceivedFacialData = message;
+            //Debug.Log(String.Format("onRecvSEIMsg {0}, {1}, {2}", userId, seiMessage, msgSize));
             Debug.Log("onRecvSEIMsg: " + userId + ", " + msgSize + ", " + m_byteReceivedFacialData.Length);
-            LogManager.Log("onRecvSEIMsg: " + userId + ", " + msgSize + ", " + m_byteReceivedFacialData.Length);
+            //LogManager.Log("onRecvSEIMsg: " + userId + ", " + msgSize + ", " + m_byteReceivedFacialData.Length);
+            string strInfo = "";
+            for (int i = 0; i < msgSize; i++)
+            {
+                strInfo += message[i].ToString() + ", ";
+            }
+            Debug.Log("strInfo: " + strInfo);
+
+
+
+
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            long unixTimeMilliseconds = now.ToUnixTimeMilliseconds();
+            if (timestamp == 0)
+            {
+                timestamp = unixTimeMilliseconds;
+            }
+            else
+            {
+                var delta_time = unixTimeMilliseconds - timestamp;
+                timestamp = unixTimeMilliseconds;
+
+                during_time += delta_time;
+                if (during_time >= 1000)
+                {
+                    Debug.Log("during_time: " + during_time + ", during_count: " + during_count);
+                    during_time = 0;
+                    during_count = 0;
+                }
+                else
+                {
+                    during_count += 1;
+                }
+            }
         }
 
         public void onStartPublishing(int err, string errMsg)
@@ -995,11 +1136,6 @@ namespace FaceChat
             LogManager.Log(String.Format("onAudioDevicePlayoutVolumeChanged {0} , {1}",  volume ,muted));
         }
        
-        public void onRecvCustomCmdMsg(string userId, int cmdID, int seq, byte[] message, int messageSize)
-        {
-            string msg = System.Text.Encoding.UTF8.GetString(message, 0, messageSize);
-            LogManager.Log(Environment.NewLine + String.Format("onRecvCustomCmdMsg {0}, {1} ,{2}", userId, cmdID, msg));
-        }
         public void onMissCustomCmdMsg(string userId, int cmdID, int errCode, int missed)
         {
             LogManager.Log(String.Format("onMissCustomCmdMsg {0}, {1}", userId, cmdID));

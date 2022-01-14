@@ -75,7 +75,7 @@ namespace FaceChat
 
         private void Start()
         {
-            m_encodeType = GameObject.Find("AR Session Origin Model").GetComponent<BlendShapesDataContainer>().encodeType;
+            m_encodeType = GameObject.Find("AR Session Origin").GetComponent<BlendShapesDataContainer>().encodeType;
             m_byteFacialData = GameObject.Find("AR Session Origin").GetComponent<BlendShapesDataContainer>().byteReceivedFacialData;
         }
 

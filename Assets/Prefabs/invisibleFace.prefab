@@ -58,3 +58,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_CoefficientScale: 100
+  m_encodeType: 0
+  m_byteFacialData: 

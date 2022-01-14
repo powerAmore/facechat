@@ -123,6 +123,8 @@ namespace FaceChat
             {
                 if (m_encodeType == 1)
                 {
+                    Array.Clear(m_byteFacialData, 1, m_byteFacialData.Length-1);
+
                     ushort[] ushortFacialDataArray = new ushort[3 + 52];
 
                     var rotationRelativeToCamera = Quaternion.Inverse(m_Origin.camera.transform.rotation) * m_Face.transform.rotation; // this quaternion represents a face rotation relative to camera
@@ -175,6 +177,7 @@ namespace FaceChat
                 }
                 else if (m_encodeType == 2)
                 {
+                    Array.Clear(m_byteFacialData, 1, m_byteFacialData.Length - 1);
                     ushort[] ushortFacialDataArray = new ushort[3];
 
                     var rotationRelativeToCamera = Quaternion.Inverse(m_Origin.camera.transform.rotation) * m_Face.transform.rotation; // this quaternion represents a face rotation relative to camera

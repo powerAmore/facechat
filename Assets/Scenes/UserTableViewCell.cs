@@ -25,7 +25,7 @@ namespace FaceChat
         public Sprite VideoOffImg;
         public Sprite VideoRenderFillImg;
         public Sprite VideoRenderFitImg;
-        public TRTCVideoRender VideoRender;
+        //public TRTCVideoRender VideoRender;
         public RawImage m_ModelView1;
         public RawImage m_ModelView2;
 
@@ -95,9 +95,9 @@ namespace FaceChat
             set
             {
                 isVideoAvailable = value;
-                VideoRender.gameObject.SetActive(isVideoAvailable);
-                VideoRender.GetComponent<TRTCVideoRender>().Clear();
-                VideoRender.SetForUser(userIdStr, streamTypeInt);
+                //VideoRender.gameObject.SetActive(isVideoAvailable);
+                //VideoRender.GetComponent<TRTCVideoRender>().Clear();
+                //VideoRender.SetForUser(userIdStr, streamTypeInt);
             }
         }
 
@@ -145,12 +145,12 @@ namespace FaceChat
 
         public void CellSwitchRenderMode()
         {
-            TRTCVideoFillMode videoFillMode = VideoRender.GetViewFillMode();
-            if (videoFillMode == TRTCVideoFillMode.TRTCVideoFillMode_Fit)
-                videoFillMode = TRTCVideoFillMode.TRTCVideoFillMode_Fill;
-            else
-                videoFillMode = TRTCVideoFillMode.TRTCVideoFillMode_Fit;
-            VideoRender.SetViewFillMode(videoFillMode);
+            //TRTCVideoFillMode videoFillMode = VideoRender.GetViewFillMode();
+            //if (videoFillMode == TRTCVideoFillMode.TRTCVideoFillMode_Fit)
+            //    videoFillMode = TRTCVideoFillMode.TRTCVideoFillMode_Fill;
+            //else
+            //    videoFillMode = TRTCVideoFillMode.TRTCVideoFillMode_Fit;
+            //VideoRender.SetViewFillMode(videoFillMode);
             //RenderModeBtn.image.sprite = (videoFillMode == TRTCVideoFillMode.TRTCVideoFillMode_Fit ? VideoRenderFillImg : VideoRenderFitImg);
         }
 
