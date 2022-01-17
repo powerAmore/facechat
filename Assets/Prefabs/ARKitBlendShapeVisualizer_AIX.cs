@@ -47,6 +47,7 @@ namespace FaceChat
 
         public int m_encodeType;
         public byte[] m_byteFacialData;
+        private BlendShapesDataContainer m_BlendShapesDataContainer;
 
         [SerializeField]
         SkinnedMeshRenderer m_SkinnedMeshRenderer;
@@ -77,6 +78,7 @@ namespace FaceChat
         {
             m_encodeType = GameObject.Find("AR Session Origin").GetComponent<BlendShapesDataContainer>().encodeType;
             m_byteFacialData = GameObject.Find("AR Session Origin").GetComponent<BlendShapesDataContainer>().byteReceivedFacialData;
+            m_BlendShapesDataContainer = GameObject.Find("AR Session Origin").GetComponent<BlendShapesDataContainer>();
         }
 
         void CreateFeatureBlendMapping()
@@ -179,10 +181,13 @@ namespace FaceChat
                 return;
             }
 
-            if (m_encodeType == 1)
+            Debug.Log("UpdateFaceFeatures, m_byteFacialData.Length: " + m_byteFacialData.Length);
+            Debug.Log("UpdateFaceFeatures, m_BlendShapesDataContainer.byteReceivedFacialData.Length: " + m_BlendShapesDataContainer.byteReceivedFacialData.Length);
+
+            if (m_BlendShapesDataContainer.byteReceivedFacialData.Length == 111)
             {
-                var ushortArray = new ushort[(m_byteFacialData.Length - 1) / 2];
-                Buffer.BlockCopy(m_byteFacialData, 1, ushortArray, 0, m_byteFacialData.Length - 1);
+                var ushortArray = new ushort[(m_BlendShapesDataContainer.byteReceivedFacialData.Length - 1) / 2];
+                Buffer.BlockCopy(m_BlendShapesDataContainer.byteReceivedFacialData, 1, ushortArray, 0, m_BlendShapesDataContainer.byteReceivedFacialData.Length - 1);
 
                 Vector3 newRotation = new Vector3(Mathf.HalfToFloat((ushort)ushortArray.GetValue(0)) * 1000,
                                                   Mathf.HalfToFloat((ushort)ushortArray.GetValue(1)) * 1000,
@@ -229,20 +234,23 @@ namespace FaceChat
                 //}
                 //Debug.Log("ushortArray: " + strInfo);
             }
-            else if (m_encodeType == 2)
+            else if (m_BlendShapesDataContainer.byteReceivedFacialData.Length == 59)
             {
                 var ushortArray = new ushort[3];
-                Buffer.BlockCopy(m_byteFacialData, 1, ushortArray, 0, ushortArray.Length * 2);
+                Buffer.BlockCopy(m_BlendShapesDataContainer.byteReceivedFacialData, 1, ushortArray, 0, ushortArray.Length * 2);
 
                 Vector3 newRotation = new Vector3(Mathf.HalfToFloat((ushort)ushortArray.GetValue(0)) * 1000,
                                                   Mathf.HalfToFloat((ushort)ushortArray.GetValue(1)) * 1000,
                                                   Mathf.HalfToFloat((ushort)ushortArray.GetValue(2)) * 1000);
                 transform.eulerAngles = newRotation;
+                Debug.Log(String.Format("newRotation {0}, {1}, {2}", Mathf.HalfToFloat((ushort)ushortArray.GetValue(0)) * 1000,
+                                                                    Mathf.HalfToFloat((ushort)ushortArray.GetValue(1)) * 1000,
+                                                                    Mathf.HalfToFloat((ushort)ushortArray.GetValue(2)) * 1000));
 
-                for (int i = 7; i < m_byteFacialData.Length; i++)
+                for (int i = 7; i < m_BlendShapesDataContainer.byteReceivedFacialData.Length; i++)
                 {
                     int blendShapeLocationIndex = i - 7;
-                    int coefficient = m_byteFacialData[i];
+                    int coefficient = m_BlendShapesDataContainer.byteReceivedFacialData[i];
                     int mappedBlendShapeIndex;
                     if (m_FaceArkitBlendShapeIndexMap.TryGetValue((ARKitBlendShapeLocation)blendShapeLocationIndex, out mappedBlendShapeIndex))
                     {

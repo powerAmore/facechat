@@ -45,7 +45,6 @@ namespace FaceChat
                 return;
             LogManager.Log(String.Format("AddUser: {0}", userId));
             GameObject cell = Instantiate(tableViewCell);
-            //cell.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
             cell.transform.SetParent(contentView.transform, false);
 
             UserTableViewCell tableViewCellScript = cell.GetComponent<UserTableViewCell>();

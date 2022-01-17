@@ -49,7 +49,9 @@ namespace FaceChat
         //private Text m_infoText2;
 
         public byte[] m_byteFacialData;
-        public byte[] m_byteReceivedFacialData;
+        //public byte[] m_byteReceivedFacialData;
+        private BlendShapesDataContainer m_BlendShapesDataContainer;
+
         private float time = 0;//记录已经经过多少秒
         private float during_time = 0;//记录已经经过多少秒
         private long timestamp = 0;
@@ -149,7 +151,7 @@ namespace FaceChat
             //m_infoText = GameObject.Find("DataTunnel").GetComponent<Text>();
             //m_infoText2 = GameObject.Find("DataTunnel2").GetComponent<Text>();
             m_byteFacialData = GameObject.Find("AR Session Origin").GetComponent<BlendShapesDataContainer>().byteFacialData;
-            m_byteReceivedFacialData = GameObject.Find("AR Session Origin").GetComponent<BlendShapesDataContainer>().byteReceivedFacialData;
+            m_BlendShapesDataContainer = GameObject.Find("AR Session Origin").GetComponent<BlendShapesDataContainer>();
 
             //Toggle toggleSetting = transform.Find("PanelTest/Viewport/Content/ToggleSetting").gameObject.GetComponent<Toggle>();
             //toggleSetting.onValueChanged.AddListener(this.OnToggleSetting);
@@ -979,7 +981,7 @@ namespace FaceChat
         public void onRecvCustomCmdMsg(String userId, int cmdID, int seq, Byte[] message, int messageSize)
         {
 
-            LogManager.Log(String.Format("onRecvCustomCmdMsg {0}, {1} ,{2}, {3}, {4}", userId, cmdID, seq, messageSize, m_byteReceivedFacialData.Length));
+            LogManager.Log(String.Format("onRecvCustomCmdMsg {0}, {1} ,{2}, {3}", userId, cmdID, seq, messageSize));
             string strInfo = "";
             for (int i = 0; i < messageSize; i++)
             {
@@ -1017,10 +1019,10 @@ namespace FaceChat
         public void onRecvSEIMsg(String userId, Byte[] message, UInt32 msgSize)
         {
             //string seiMessage = System.Text.Encoding.UTF8.GetString(message, 0, (int)msgSize);
-            //m_byteReceivedFacialData = message;
+            
             //Debug.Log(String.Format("onRecvSEIMsg {0}, {1}, {2}", userId, seiMessage, msgSize));
-            Debug.Log("onRecvSEIMsg: " + userId + ", " + msgSize + ", " + m_byteReceivedFacialData.Length);
-            //LogManager.Log("onRecvSEIMsg: " + userId + ", " + msgSize + ", " + m_byteReceivedFacialData.Length);
+            Debug.Log("onRecvSEIMsg: " + userId + ", " + msgSize);
+            
             string strInfo = "";
             for (int i = 0; i < msgSize; i++)
             {
@@ -1028,7 +1030,10 @@ namespace FaceChat
             }
             Debug.Log("strInfo: " + strInfo);
 
-
+            if (msgSize == 111 || msgSize == 59)
+            {
+                m_BlendShapesDataContainer.byteReceivedFacialData = message.ToArray();
+            }
 
 
             DateTimeOffset now = DateTimeOffset.UtcNow;
