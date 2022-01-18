@@ -300,7 +300,7 @@ namespace FaceChat
             //Debug.Log("fps: " + fps.ToString());
             //Debug.Log("m_byteFacialData.Length: " + m_byteFacialData.Length);
             time += Time.deltaTime;
-            if (time >= 0.033)
+            if (time >= 0.03333333)
             {
                 //Debug.Log("time: " + time);
                 time = 0;
