@@ -181,8 +181,8 @@ namespace FaceChat
                 return;
             }
 
-            Debug.Log("UpdateFaceFeatures, m_byteFacialData.Length: " + m_byteFacialData.Length);
-            Debug.Log("UpdateFaceFeatures, m_BlendShapesDataContainer.byteReceivedFacialData.Length: " + m_BlendShapesDataContainer.byteReceivedFacialData.Length);
+            //Debug.Log("UpdateFaceFeatures, m_byteFacialData.Length: " + m_byteFacialData.Length);
+            //Debug.Log("UpdateFaceFeatures, m_BlendShapesDataContainer.byteReceivedFacialData.Length: " + m_BlendShapesDataContainer.byteReceivedFacialData.Length);
 
             if (m_BlendShapesDataContainer.byteReceivedFacialData.Length == 111)
             {
@@ -243,10 +243,7 @@ namespace FaceChat
                                                   Mathf.HalfToFloat((ushort)ushortArray.GetValue(1)) * 1000,
                                                   Mathf.HalfToFloat((ushort)ushortArray.GetValue(2)) * 1000);
                 transform.eulerAngles = newRotation;
-                Debug.Log(String.Format("newRotation {0}, {1}, {2}", Mathf.HalfToFloat((ushort)ushortArray.GetValue(0)) * 1000,
-                                                                    Mathf.HalfToFloat((ushort)ushortArray.GetValue(1)) * 1000,
-                                                                    Mathf.HalfToFloat((ushort)ushortArray.GetValue(2)) * 1000));
-
+                
                 for (int i = 7; i < m_BlendShapesDataContainer.byteReceivedFacialData.Length; i++)
                 {
                     int blendShapeLocationIndex = i - 7;

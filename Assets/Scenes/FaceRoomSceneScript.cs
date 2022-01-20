@@ -296,13 +296,13 @@ namespace FaceChat
 
         void Update()
         {
-            //var fps = 1.0f / Time.deltaTime;
-            //Debug.Log("fps: " + fps.ToString());
+            var fps = 1.0f / Time.deltaTime;
+            Debug.Log("fps: " + fps.ToString());
             //Debug.Log("m_byteFacialData.Length: " + m_byteFacialData.Length);
             time += Time.deltaTime;
-            if (time >= 0.03333333)
+            if (time > 0.03)
             {
-                //Debug.Log("time: " + time);
+                Debug.Log("time: " + time);
                 time = 0;
                 CustomSendSEIMsg();
                 //SendCustomCmdMsg();
@@ -888,8 +888,21 @@ namespace FaceChat
             userTableView.UpdateAudioAvailable(userId, TRTCVideoStreamType.TRTCVideoStreamTypeBig, available);
         }
 
-        public void onLocalProcessedAudioFrame(TRTCAudioFrame frame)
-        { }
+        //public void onLocalProcessedAudioFrame(TRTCAudioFrame frame)
+        //{
+        //    byte[] message = m_byteFacialData.ToArray();
+
+        //    string strInfo = "";
+        //    for (int i = 0; i < message.Length; i++)
+        //    {
+        //        strInfo += message[i].ToString() + ", ";
+        //    }
+        //    Debug.Log("seiMsg.Length: " + message.Length);
+        //    Debug.Log("seiMsg strInfo: " + strInfo);
+
+        //    frame.extraData = message;
+
+        //}
 
 
         public void onFirstVideoFrame(String userId, TRTCVideoStreamType streamType, int width, int height)
@@ -1022,13 +1035,14 @@ namespace FaceChat
             
             //Debug.Log(String.Format("onRecvSEIMsg {0}, {1}, {2}", userId, seiMessage, msgSize));
             Debug.Log("onRecvSEIMsg: " + userId + ", " + msgSize);
-            
-            string strInfo = "";
-            for (int i = 0; i < msgSize; i++)
-            {
-                strInfo += message[i].ToString() + ", ";
-            }
-            Debug.Log("strInfo: " + strInfo);
+            //Debug.Log(String.Format("onRecvSEIMsg {0}, {1}, {2}", userId, msgSize, 59));
+
+            //string strInfo = "";
+            //for (int i = 0; i < msgSize; i++)
+            //{
+            //    strInfo += message[i].ToString() + ", ";
+            //}
+            //Debug.Log("strInfo: " + strInfo);
 
             if (msgSize == 111 || msgSize == 59)
             {
