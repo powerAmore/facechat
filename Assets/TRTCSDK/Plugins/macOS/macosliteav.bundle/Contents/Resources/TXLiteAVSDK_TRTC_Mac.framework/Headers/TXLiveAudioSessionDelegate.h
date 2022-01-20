@@ -35,9 +35,6 @@
 @optional
 - (BOOL)overrideOutputAudioPort:(AVAudioSessionPortOverride)portOverride error:(NSError **)outError;
 
-@optional
-- (BOOL)setPreferredInput:(nullable AVAudioSessionPortDescription *)inPort error:(NSError **)outError;
-
 #endif
 @end
 #endif /* TXLiveAudioSessionDelegate_h */
