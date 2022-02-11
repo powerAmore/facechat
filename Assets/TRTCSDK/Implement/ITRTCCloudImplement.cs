@@ -295,6 +295,7 @@ namespace trtc
             return ITRTCCloudNative.TRTCUnityGetAudioCaptureVolume(mNativeObj);
         }
 
+
         /////////////////////////////////////////////////////////////////////////////////
         //
         //                      （五）摄像头相关接口函数
@@ -520,20 +521,7 @@ namespace trtc
             return 0;
         }
 
-        public override int setAudioFrameCallback(ITRTCAudioFrameCallback callback)
-        {
-            if (sInstance == null)
-                return 0;
-            if (callback == null)
-            {
-                ITRTCCloudNative.TRTCUnitySetAudioFrameCallback(mNativeObj, null, null, null,null);
-                sInstance.mAudioCallbacks.Clear();
-                return 0;
-            }
-            sInstance.mAudioCallbacks.Add(callback);
-            int rn = ITRTCCloudNative.TRTCUnitySetAudioFrameCallback(mNativeObj, onCapturedRawAudioFrameHandler, onLocalProcessedAudioFrameHandler, onPlayAudioFrameHandler, onMixedPlayAudioFrameHandler);
-            return rn;
-        }
+        //public override int setAudioFrameCallback(ITRTCAudioFrameCallback callback);
 
         /////////////////////////////////////////////////////////////////////////////////
         //
@@ -683,7 +671,7 @@ namespace trtc
 
         private ITRTCCloudImplement()
         {
-            #if UNITY_ANDROID && !UNITY_EDITOR
+            #if UNITY_ANDROID
             AndroidJavaClass androidJavaClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
             AndroidJavaObject androidJavaObject = androidJavaClass.GetStatic<AndroidJavaObject>("currentActivity");
             IntPtr objPtr = androidJavaObject.GetRawObject();
@@ -704,6 +692,7 @@ namespace trtc
                 onScreenCaptureStartedHandler, onScreenCapturePausedHandler,
                 onScreenCaptureResumedHandler, onScreenCaptureStopedHandler);
 #endif
+#if UNITY_ANDROID || UNITY_IOS || UNITY_STANDALONE_OSX
             ITRTCCloudNative.TRTCUnityAddOtherCallback(mNativeObj,
                 onConnectOtherRoomHandler,
                 onDisconnectOtherRoomHandler,
@@ -719,6 +708,7 @@ namespace trtc
                 onStopPublishCDNStreamHandler,
                 onSetMixTranscodingConfigHandle
             );
+#endif
             mGameObjName = TRTCCallbackObj.CreateGameObj();
         }
 
@@ -751,8 +741,6 @@ namespace trtc
 
 #region Callback
         private List<ITRTCCloudCallback> mCallbacks = new List<ITRTCCloudCallback>();
-        private List<ITRTCAudioFrameCallback> mAudioCallbacks = new List<ITRTCAudioFrameCallback>();
-
         private Dictionary<RenderKey, ITRTCVideoRenderCallback> mVideoCallbacks = new Dictionary<RenderKey, ITRTCVideoRenderCallback>();
 
         private bool HasOtherStreamRendering(string userId)
@@ -791,7 +779,6 @@ namespace trtc
             }
             return callbacks;
         }
-
         private static bool isBuffAvailable(UInt32 buffLength, int offset, UInt32 fieldLength)
         {
             return (offset + fieldLength <= buffLength);
@@ -1207,83 +1194,7 @@ namespace trtc
             }
         }
 
-        // 音频相关回调
-        [MonoPInvokeCallback(typeof(ITRTCCloudNative.onCapturedRawAudioFrameHandler))]
-        public static void onCapturedRawAudioFrameHandler(int audioFormat,IntPtr data,UInt32 length,UInt32 sampleRate,UInt32 channel,UInt64 timestamp)
-        {
-            if (sInstance == null) return;
-            TRTCAudioFrame frame = new TRTCAudioFrame();
-            frame.audioFormat = (TRTCAudioFrameFormat)audioFormat;
-            frame.data = new byte[length];
-            Marshal.Copy(data, frame.data, 0, (int)length);
-            frame.sampleRate = sampleRate;
-            frame.channel = channel;
-            frame.timestamp = timestamp;
-            
-            List<ITRTCAudioFrameCallback> callbacks = sInstance.mAudioCallbacks;
-            foreach (ITRTCAudioFrameCallback callback in callbacks)
-            {
-                callback.onCapturedRawAudioFrame(frame);
-            }
-        }
-
-        [MonoPInvokeCallback(typeof(ITRTCCloudNative.onLocalProcessedAudioFrameHandler))]
-        public static void onLocalProcessedAudioFrameHandler(int audioFormat,IntPtr data,UInt32 length,UInt32 sampleRate,UInt32 channel,UInt64 timestamp)
-        {
-            if (sInstance == null) return;
-            TRTCAudioFrame frame = new TRTCAudioFrame();
-            frame.audioFormat = (TRTCAudioFrameFormat)audioFormat;
-            frame.data = new byte[length];
-            Marshal.Copy(data, frame.data, 0, (int)length);
-            frame.sampleRate = sampleRate;
-            frame.channel = channel;
-            frame.timestamp = timestamp;
-            
-            List<ITRTCAudioFrameCallback> callbacks = sInstance.mAudioCallbacks;
-            foreach (ITRTCAudioFrameCallback callback in callbacks)
-            {
-                callback.onLocalProcessedAudioFrame(frame);
-            }
-        }
-
-        [MonoPInvokeCallback(typeof(ITRTCCloudNative.onPlayAudioFrameHandler))]
-        public static void onPlayAudioFrameHandler(int audioFormat,IntPtr data,UInt32 length,UInt32 sampleRate,UInt32 channel,UInt64 timestamp, string userId)
-        {
-            if (sInstance == null) return;
-            TRTCAudioFrame frame = new TRTCAudioFrame();
-            frame.audioFormat = (TRTCAudioFrameFormat)audioFormat;
-            frame.data = new byte[length];
-            Marshal.Copy(data, frame.data, 0, (int)length);
-            frame.sampleRate = sampleRate;
-            frame.channel = channel;
-            frame.timestamp = timestamp;
-            
-            List<ITRTCAudioFrameCallback> callbacks = sInstance.mAudioCallbacks;
-            foreach (ITRTCAudioFrameCallback callback in callbacks)
-            {
-                callback.onPlayAudioFrame(frame,userId);
-            }
-        }
-
-        [MonoPInvokeCallback(typeof(ITRTCCloudNative.onMixedPlayAudioFrameHandler))]
-        public static void onMixedPlayAudioFrameHandler(int audioFormat,IntPtr data,UInt32 length,UInt32 sampleRate,UInt32 channel,UInt64 timestamp)
-        {
-            if (sInstance == null) return;
-            TRTCAudioFrame frame = new TRTCAudioFrame();
-            frame.audioFormat = (TRTCAudioFrameFormat)audioFormat;
-            frame.data = new byte[length];
-            Marshal.Copy(data, frame.data, 0, (int)length);
-            frame.sampleRate = sampleRate;
-            frame.channel = channel;
-            frame.timestamp = timestamp;
-            
-            List<ITRTCAudioFrameCallback> callbacks = sInstance.mAudioCallbacks;
-            foreach (ITRTCAudioFrameCallback callback in callbacks)
-            {
-                callback.onMixedPlayAudioFrame(frame);
-            }
-        }
-
+        
         [MonoPInvokeCallback(typeof(ITRTCCloudNative.onConnectOtherRoomHandler))]
         public static void onConnectOtherRoomHandler(string userId, TXLiteAVError errCode, string errMsg)
         {
@@ -1362,14 +1273,12 @@ namespace trtc
             }
         }
         [MonoPInvokeCallback(typeof(ITRTCCloudNative.onRecvCustomCmdMsgHandler))]
-        public static void onRecvCustomCmdMsgHandler(String userId, int cmdID, int seq, IntPtr message, int messageSize)
+        public static void onRecvCustomCmdMsgHandler(String userId, int cmdID, int seq, byte[] message, int messageSize)
         {
             List<ITRTCCloudCallback> callbacks = ITRTCCloudImplement.dumplicateCallbacks();
-            byte[] data  = new byte[messageSize];
-            Marshal.Copy(message, data, 0, (int)messageSize);
             foreach (ITRTCCloudCallback callback in callbacks)
             {
-                callback.onRecvCustomCmdMsg(userId, cmdID,seq,data,messageSize);
+                callback.onRecvCustomCmdMsg(userId, cmdID,seq,message,messageSize);
             }
         }
 
@@ -1382,6 +1291,6 @@ namespace trtc
                 callback.onMissCustomCmdMsg(userId, cmdID, errCode,missed);
             }
         }
-        #endregion
+#endregion
     }
 }
