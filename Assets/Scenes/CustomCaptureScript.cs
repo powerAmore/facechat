@@ -322,7 +322,7 @@ namespace FaceChat
                     while (mStartCustomCaptureVideo)
                     {
                         SendCustomBlackVideoFrame();
-                        Thread.Sleep(66);
+                        Thread.Sleep(33);
                     }
                 })
                 { IsBackground = true };

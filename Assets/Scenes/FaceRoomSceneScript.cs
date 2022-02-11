@@ -297,7 +297,7 @@ namespace FaceChat
         void Update()
         {
             var fps = 1.0f / Time.deltaTime;
-            Debug.Log("fps: " + fps.ToString());
+            //Debug.Log("fps: " + fps.ToString());
             //Debug.Log("m_byteFacialData.Length: " + m_byteFacialData.Length);
             time += Time.deltaTime;
             if (time > 0.03)
